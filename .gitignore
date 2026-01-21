@@ -1,0 +1,87 @@
+# ==========================================
+# User Management System - .gitignore
+# ==========================================
+
+# ------------------------
+# IDE & Editor Files
+# ------------------------
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ------------------------
+# Environment & Secrets
+# ------------------------
+.env
+.env.local
+.env.*.local
+*.local
+
+# ------------------------
+# Backend (Java/Spring)
+# ------------------------
+backend/target/
+backend/*.class
+backend/.classpath
+backend/.project
+backend/.settings/
+backend/.factorypath
+backend/.env
+backend/*.jar
+backend/HELP.md
+backend/target/
+
+# ------------------------
+# Frontend (React/Node.js)
+# ------------------------
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+frontend/.env
+frontend/.env.local
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/.eslintcache
+frontend/.stylelintcache
+
+# ------------------------
+# Docker
+# ------------------------
+docker-compose.override.yml
+*.log
+.docker/
+
+# ------------------------
+# Database
+# ------------------------
+*.sql.bak
+*.backup
+
+# ------------------------
+# Project Specific
+# ------------------------
+.claude/
+*.md.bak
+docs/*.md.bak
+.parsed-inventing-plum.md
+
+# ------------------------
+# OS Files
+# ------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# ------------------------
+# Git Files (keep empty)
+# ------------------------
+!.gitkeep

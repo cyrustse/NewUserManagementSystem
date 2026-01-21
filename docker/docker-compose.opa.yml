@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  opa:
+    image: openpolicyagent/opa:latest
+    container_name: ums-opa
+    command: run --server --log-level debug
+    ports:
+      - "8181:8181"
+    networks:
+      - ums-network
+
+networks:
+  ums-network:
+    external: true

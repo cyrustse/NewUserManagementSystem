@@ -1,0 +1,243 @@
+_format_version: "3.0"
+_transform: true
+
+# Auth service (public endpoints - rate limited to 20 req/min)
+services:
+  - name: auth-service
+    url: http://ums-backend:8080
+    retries: 3
+    connect_timeout: 10000
+    write_timeout: 60000
+    read_timeout: 60000
+
+    routes:
+      - name: auth-routes
+        paths:
+          - /api/v1/auth
+        strip_path: false
+        path_handling: v0
+
+        plugins:
+          # Rate limiting for auth endpoints: 20 req/min
+          - name: rate-limiting
+            config:
+              minute: 20
+              hour: 100
+              policy: local
+              fault_tolerant: true
+              hide_client_headers: false
+
+          - name: cors
+            config:
+              origins:
+                - http://localhost:3000
+                - http://localhost:5173
+              methods:
+                - GET
+                - POST
+                - PUT
+                - DELETE
+                - OPTIONS
+              headers:
+                - Accept
+                - Accept-Version
+                - Content-Length
+                - Content-Type
+                - Authorization
+              credentials: true
+              max_age: 3600
+
+          - name: request-size-limiting
+            config:
+              allowed_payload_size: 128
+              size_unit: megabytes
+
+          # IP-based rate limiting for login attempts
+          - name: ip-restriction
+            config:
+              allow:
+                - 0.0.0.0/0
+              deny:
+
+# Backend API service (protected endpoints - JWT verified)
+  - name: backend-service
+    url: http://ums-backend:8080
+    retries: 3
+    connect_timeout: 10000
+    write_timeout: 60000
+    read_timeout: 60000
+
+    routes:
+      - name: api-routes
+        paths:
+          - /api/v1
+        strip_path: false
+        path_handling: v0
+
+        plugins:
+          # Rate limiting for API endpoints: 60 req/min
+          - name: rate-limiting
+            config:
+              minute: 60
+              hour: 1000
+              policy: local
+              fault_tolerant: true
+              hide_client_headers: false
+
+          # JWT verification plugin - DISABLED for cookie-based auth
+          # JWT verification is handled by the backend application
+          # - name: jwt
+          #   config:
+          #     key_claim_name: iss
+          #     claims_to_verify:
+          #       - exp
+          #     run_on_preflight: true
+          #     maximum_expiration: 1800  # 30 minutes
+
+          - name: cors
+            config:
+              origins:
+                - http://localhost:3000
+                - http://localhost:5173
+              methods:
+                - GET
+                - POST
+                - PUT
+                - DELETE
+                - OPTIONS
+              headers:
+                - Accept
+                - Accept-Version
+                - Content-Length
+                - Content-Type
+                - Authorization
+              credentials: true
+              max_age: 3600
+
+          - name: request-size-limiting
+            config:
+              allowed_payload_size: 128
+              size_unit: megabytes
+
+# User endpoints with stricter rate limiting (60 req/min)
+  - name: user-service
+    url: http://ums-backend:8080
+    retries: 3
+    connect_timeout: 10000
+    write_timeout: 60000
+    read_timeout: 60000
+
+    routes:
+      - name: user-routes
+        paths:
+          - /api/v1/users
+        strip_path: false
+        path_handling: v0
+
+        plugins:
+          - name: rate-limiting
+            config:
+              minute: 60
+              hour: 1000
+              policy: local
+              fault_tolerant: true
+
+# Role endpoints
+  - name: role-service
+    url: http://ums-backend:8080
+    retries: 3
+    connect_timeout: 10000
+    write_timeout: 60000
+    read_timeout: 60000
+
+    routes:
+      - name: role-routes
+        paths:
+          - /api/v1/roles
+        strip_path: false
+        path_handling: v0
+
+        plugins:
+          - name: rate-limiting
+            config:
+              minute: 60
+              hour: 1000
+              policy: local
+              fault_tolerant: true
+
+# Permission endpoints
+  - name: permission-service
+    url: http://ums-backend:8080
+    retries: 3
+    connect_timeout: 10000
+    write_timeout: 60000
+    read_timeout: 60000
+
+    routes:
+      - name: permission-routes
+        paths:
+          - /api/v1/permissions
+        strip_path: false
+        path_handling: v0
+
+        plugins:
+          - name: rate-limiting
+            config:
+              minute: 60
+              hour: 1000
+              policy: local
+              fault_tolerant: true
+
+# Audit endpoints (admin only)
+  - name: audit-service
+    url: http://ums-backend:8080
+    retries: 3
+    connect_timeout: 10000
+    write_timeout: 60000
+    read_timeout: 60000
+
+    routes:
+      - name: audit-routes
+        paths:
+          - /api/v1/audit
+        strip_path: false
+        path_handling: v0
+
+        plugins:
+          - name: rate-limiting
+            config:
+              minute: 30
+              hour: 500
+              policy: local
+              fault_tolerant: true
+
+# Consumer definitions
+consumers:
+  - username: user-management-system
+  - username: frontend-app
+  - username: mobile-app
+  - username: admin-dashboard
+
+# JWT Credentials for consumers
+jwt_secrets:
+  - consumer: user-management-system
+    key: user-management-system
+    secret: your-256-bit-secret-key-for-jwt-signing-here-must-be-at-least-256-bits
+    algorithm: HS512
+  - consumer: frontend-app
+    key: frontend-app
+    secret: another-256-bit-secret-key-for-frontend-app-signing
+    algorithm: HS512
+  - consumer: mobile-app
+    key: mobile-app
+    secret: mobile-app-jwt-secret-key-at-least-256-bits-long
+    algorithm: HS512
+  - consumer: admin-dashboard
+    key: admin-dashboard
+    secret: admin-dashboard-jwt-secret-key-at-least-256-bits
+    algorithm: HS512
+
+# Key authentication for service-to-service communication
+keyauth_credentials:
+  - consumer: user-management-system
+    key: service-to-service-api-key-user-management

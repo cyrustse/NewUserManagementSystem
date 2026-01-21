@@ -1,0 +1,92 @@
+spring:
+  application:
+    name: user-management-system
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:ums}
+    username: ${DB_USERNAME:ums_user}
+    password: ${DB_PASSWORD:ums_password}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      idle-timeout: 300000
+      connection-timeout: 20000
+
+  config:
+    import: optional:file:./secrets.yml
+
+server:
+  port: ${SERVER_PORT:8080}
+  servlet:
+    context-path: /api/v1
+  error:
+    include-message: always
+    include-binding-errors: always
+
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET:your-256-bit-secret-key-for-jwt-signing-here-must-be-at-least-256-bits}
+  access-token-expiration: 1800  # 30 minutes in seconds
+  refresh-token-expiration: 604800  # 7 days in seconds
+  issuer: ${JWT_ISSUER:user-management-system}
+
+# Redis Configuration
+redis:
+  host: ${REDIS_HOST:localhost}
+  port: ${REDIS_PORT:6379}
+  password: ${REDIS_PASSWORD:}
+  timeout: 2000
+  cache:
+    ttl: 3600  # 1 hour default TTL
+
+# OPA Configuration
+opa:
+  url: ${OPA_URL:http://localhost:8181}
+  policy:
+    bundle: authz
+    decision: allow
+  cache:
+    ttl: 300  # 5 minutes cache for OPA decisions
+
+# Rate Limiting
+rate-limit:
+  auth:
+    requests: 20
+    window: 60  # per minute
+  api:
+    requests: 60
+    window: 60
+  ip-limit:
+    max-attempts: 5
+    window: 3600  # per hour
+
+# Security
+security:
+  bcrypt:
+    strength: 12
+  cors:
+    allowed-origins: ${CORS_ORIGINS:http://localhost:3000}
+    allowed-methods: GET,POST,PUT,DELETE,OPTIONS
+    allowed-headers: "*"
+    allow-credentials: true
+  mfa:
+    issuer: ${MFA_ISSUER:UserManagementSystem}
+
+# Logging
+logging:
+  level:
+    root: INFO
+    com.ums: DEBUG
+    org.springframework.security: DEBUG
+    com.ums.util.PasswordService: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
